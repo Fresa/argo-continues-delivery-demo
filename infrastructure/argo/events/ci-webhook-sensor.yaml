@@ -1,0 +1,57 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  name: code-pushed-sensor
+  labels:
+    sensors.argoproj.io/sensor-controller-instanceid: argo-events
+spec:
+  template:
+    spec:
+      containers:
+        - name: sensor
+          image: argoproj/sensor:v0.14.0
+          imagePullPolicy: Always
+      serviceAccountName: argo-events-sa
+  dependencies:
+    - name: pushed
+      gatewayName: demo-code-pushed-gateway
+      eventName: pushed
+  subscription:
+    http:
+      port: 9300
+  triggers:
+    - template:
+        name: build-trigger
+        # TODO: Trigger build workflow for the demo app
+        k8s:
+          group: argoproj.io
+          version: v1alpha1
+          resource: workflows
+          operation: create
+          source:
+            resource:
+              apiVersion: argoproj.io/v1alpha1
+              kind: Workflow
+              metadata:
+                generateName: webhook-
+              spec:
+                entrypoint: whalesay
+                arguments:
+                  parameters:
+                  - name: sha
+                    # the value will get overridden by event payload from pushed
+                    value: x
+                templates:
+                - name: whalesay
+                  serviceAccountName: argo-events-sa
+                  inputs:
+                    parameters:
+                    - name: sha
+                  container:
+                    image: docker/whalesay:latest
+                    command: [cowsay]
+                    args: ["{{inputs.parameters.sha}}"]
+          parameters:
+            - src:
+                dependencyName: pushed
+              dest: spec.arguments.parameters.0.value
