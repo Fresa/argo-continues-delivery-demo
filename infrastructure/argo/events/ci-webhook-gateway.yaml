@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Gateway
 metadata:
-  name: demo-code-pushed-gateway
+  name: code-pushed-gateway
   labels:
     # gateway controller with instanceId "argo-events" will process this gateway
     gateways.argoproj.io/gateway-controller-instanceid: argo-events
@@ -9,10 +9,10 @@ spec:
   replica: 1
   type: webhook
   eventSourceRef:
-    name: demo-pushed
+    name: code-pushed
   template:
     metadata:
-      name: demo-code-pushed-gateway
+      name: code-pushed-gateway
       labels:
         gateway-name: demo-code-pushed-gateway
     spec:
@@ -28,10 +28,10 @@ spec:
       serviceAccountName: argo-events-sa
   service:
     metadata:
-      name: demo-code-pushed-gateway-svc
+      name: code-pushed-gateway-svc
     spec:
       selector:
-        gateway-name: demo-code-pushed-gateway
+        gateway-name: code-pushed-gateway
       ports:
         - port: 12000
           targetPort: 12000

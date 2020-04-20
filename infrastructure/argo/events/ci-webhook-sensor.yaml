@@ -13,9 +13,9 @@ spec:
           imagePullPolicy: Always
       serviceAccountName: argo-events-sa
   dependencies:
-    - name: pushed
-      gatewayName: demo-code-pushed-gateway
-      eventName: pushed
+    - name: code-pushed
+      gatewayName: code-pushed-gateway
+      eventName: codePushed
   subscription:
     http:
       port: 9300
