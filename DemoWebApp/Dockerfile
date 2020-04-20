@@ -6,17 +6,11 @@ EXPOSE 80
 EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1-buster AS build
-WORKDIR /src
-COPY ["DemoWebApp.csproj", ""]
-RUN dotnet restore "./DemoWebApp.csproj"
 COPY . .
-WORKDIR "/src/."
-RUN dotnet build "DemoWebApp.csproj" -c Release -o /app/build
-
-FROM build AS publish
-RUN dotnet publish "DemoWebApp.csproj" -c Release -o /app/publish
+RUN dotnet publish "./DemoWebApp/DemoWebApp.csproj" -c Release -o /app/publish
+RUN dotnet test "./DemoWebAppTests/DemoWebAppTests.csproj" -c Release --logger "trx;LogFileName=test_results.xml"
 
 FROM base AS final
 WORKDIR /app
-COPY --from=publish /app/publish .
+COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "DemoWebApp.dll"]
