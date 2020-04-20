@@ -11,6 +11,25 @@ spec:
         - name: sensor
           image: argoproj/sensor:v0.14.0
           imagePullPolicy: Always
+          volumeMounts:
+            - mountPath: /git/argoproj
+              name: argoproj
+            - mountPath: /secret
+              name: sshkey
+            - mountPath: /etc/ssh
+              name: known-hosts
+      volumes:
+        - name: argoproj
+          emptyDir: {}
+        - name: sshkey
+          secret:
+            secretName: git-ssh
+        # The name of the key in the secret must be "ssh_known_hosts"
+        # Make sure you have your git provider added in the known hosts
+        # e.g. create the secret by running, kubectl -n argo-events create secret generic git-known-hosts --from-file=ssh_known_hosts=.ssh/known_hosts
+        - name: known-hosts
+          secret:
+            secretName: git-known-hosts
       serviceAccountName: argo-events-sa
   dependencies:
     - name: code-pushed
@@ -22,36 +41,22 @@ spec:
   triggers:
     - template:
         name: build-trigger
-        # TODO: Trigger build workflow for the demo app
         k8s:
           group: argoproj.io
           version: v1alpha1
           resource: workflows
           operation: create
           source:
-            resource:
-              apiVersion: argoproj.io/v1alpha1
-              kind: Workflow
-              metadata:
-                generateName: webhook-
-              spec:
-                entrypoint: whalesay
-                arguments:
-                  parameters:
-                  - name: sha
-                    # the value will get overridden by event payload from pushed
-                    value: x
-                templates:
-                - name: whalesay
-                  serviceAccountName: argo-events-sa
-                  inputs:
-                    parameters:
-                    - name: sha
-                  container:
-                    image: docker/whalesay:latest
-                    command: [cowsay]
-                    args: ["{{inputs.parameters.sha}}"]
-          parameters:
-            - src:
-                dependencyName: pushed
-              dest: spec.arguments.parameters.0.value
+            git:
+              url: "git@github.com:Fresa/argo-continues-delivery-demo.git"
+              cloneDirectory: "/argo-continues-delivery-demo"
+              sshKeyPath: "/secret/key"
+              namespace: argo-events
+              filePath: "infrastructure/argo/workflows/ci.yaml"
+              branch: "THIS_WILL_BE_REPLACED_BY_PARAMETER_FROM_CODE_PUSHED_EVENT"
+      # Apply parameters at the template level.
+      parameters:
+        - src:
+            dependencyName: code-pushed
+            dataKey: branch
+          dest: k8s.source.git.branch
