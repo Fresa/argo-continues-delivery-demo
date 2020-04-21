@@ -45,24 +45,9 @@ spec:
                 templates:
                 - name: demo-ci
                   steps:
-                  - - name: checkout
-                      template: checkout
-                      when: "{{workflow.parameters.revision}} != 0000000000000000000000000000000000000000"
                   - - name: build
                       template: build
-                
-                - name: checkout
-                  inputs:
-                    artifacts:
-                    - name: source
-                      path: /src
-                      git:
-                        repo: "{{workflow.parameters.repo}}"
-                        revision: "{{workflow.parameters.revision}}"
-                  container:
-                    image: golang:1.9.2
-                    command: ["/bin/sh", "-c"]
-                    args: ["cd /src && git status && ls -l"]
+                      when: "{{workflow.parameters.revision}} != 0000000000000000000000000000000000000000" # No commit SHA = only tag was pushed
 
                 - name: build
                   container:
@@ -71,8 +56,8 @@ spec:
                     args: ["
                       until docker ps; 
                       do sleep 3; 
-                      done; 
-                      docker build -f ./src/DemoWebApp/Dockerfile .
+                      done;
+                      docker build -t demowebapp:{{workflow.parameters.revision}} {{workflow.parameters.repo}}#{{workflow.parameters.revision}}
                     "]
                     env:
                     - name: DOCKER_HOST               # the docker daemon can be access on the standard port on localhost
