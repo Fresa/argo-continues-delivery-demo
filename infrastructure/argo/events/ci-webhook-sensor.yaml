@@ -11,25 +11,6 @@ spec:
         - name: sensor
           image: argoproj/sensor:v0.14.0
           imagePullPolicy: Always
-          volumeMounts:
-            - mountPath: /git/argoproj
-              name: argoproj
-            - mountPath: /secret
-              name: sshkey
-            - mountPath: /etc/ssh
-              name: known-hosts
-      volumes:
-        - name: argoproj
-          emptyDir: {}
-        - name: sshkey
-          secret:
-            secretName: git-ssh
-        # The name of the key in the secret must be "ssh_known_hosts"
-        # Make sure you have your git provider added in the known hosts
-        # e.g. create the secret by running, kubectl -n argo-events create secret generic git-known-hosts --from-file=ssh_known_hosts=.ssh/known_hosts
-        - name: known-hosts
-          secret:
-            secretName: git-known-hosts
       serviceAccountName: argo-events-sa
   dependencies:
     - name: code-pushed
@@ -47,16 +28,73 @@ spec:
           resource: workflows
           operation: create
           source:
-            git:
-              url: "git@github.com:Fresa/argo-continues-delivery-demo.git"
-              cloneDirectory: "/argo-continues-delivery-demo"
-              sshKeyPath: "/secret/key"
-              namespace: argo-events
-              filePath: "infrastructure/argo/workflows/ci.yaml"
-              branch: "THIS_WILL_BE_REPLACED_BY_PARAMETER_FROM_CODE_PUSHED_EVENT"
+            resource:
+              apiVersion: argoproj.io/v1alpha1
+              kind: Workflow
+              metadata:
+                generateName: demo-ci-
+              spec:
+                entrypoint: demo-ci
+                arguments:
+                  parameters:
+                  - name: repo
+                    value: SET_FROM_PARAMETER
+                  - name: revision
+                    value: SET_FROM_PARAMETER
+
+                templates:
+                - name: demo-ci
+                  steps:
+                  - - name: checkout
+                      template: checkout
+                      when: "{{workflow.parameters.revision}} != 0000000000000000000000000000000000000000"
+                  - - name: build
+                      template: build
+                
+                - name: checkout
+                  inputs:
+                    artifacts:
+                    - name: source
+                      path: /src
+                      git:
+                        repo: "{{workflow.parameters.repo}}"
+                        revision: "{{workflow.parameters.revision}}"
+                  container:
+                    image: golang:1.9.2
+                    command: ["/bin/sh", "-c"]
+                    args: ["cd /src && git status && ls -l"]
+
+                - name: build
+                  container:
+                    image: docker:17.10
+                    command: [sh, -c]
+                    args: ["
+                      until docker ps; 
+                      do sleep 3; 
+                      done; 
+                      docker build -f ./src/DemoWebApp/Dockerfile .
+                    "]
+                    env:
+                    - name: DOCKER_HOST               # the docker daemon can be access on the standard port on localhost
+                      value: 127.0.0.1
+                  sidecars:
+                  - name: dind
+                    image: docker:17.10-dind          # Docker already provides an image for running a Docker daemon
+                    securityContext:
+                      privileged: true                # the Docker daemon can only run in a privileged container
+                    # mirrorVolumeMounts will mount the same volumes specified in the main container
+                    # to the sidecar (including artifacts), at the same mountPaths. This enables
+                    # dind daemon to (partially) see the same filesystem as the main container in
+                    # order to use features such as docker volume binding.
+                    mirrorVolumeMounts: true
+
       # Apply parameters at the template level.
       parameters:
         - src:
             dependencyName: code-pushed
-            dataKey: branch
-          dest: k8s.source.git.branch
+            dataKey: repository.clone_url
+          dest: k8s.source.resource.spec.arguments.0.value
+        - src:
+            dependencyName: code-pushed
+            dataKey: after # The commit SHA after push
+          dest: k8s.source.resource.spec.arguments.1.value
