@@ -51,7 +51,7 @@ spec:
 
                 - name: build
                   container:
-                    image: docker:17.10
+                    image: docker:19.03-git
                     command: [sh, -c]
                     args: ["
                       until docker ps; 
@@ -64,7 +64,7 @@ spec:
                       value: 127.0.0.1
                   sidecars:
                   - name: dind
-                    image: docker:17.10-dind          # Docker already provides an image for running a Docker daemon
+                    image: docker:19.03-dind          # Docker already provides an image for running a Docker daemon
                     securityContext:
                       privileged: true                # the Docker daemon can only run in a privileged container
                     # mirrorVolumeMounts will mount the same volumes specified in the main container
