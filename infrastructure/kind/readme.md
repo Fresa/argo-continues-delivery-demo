@@ -1,0 +1,3 @@
+Kind k8s clusters won't necessary survive a restart of the docker daemon causing etcd and the api service etc to fail, rendering the cluster in a b0rken state. The solution is to recreate the cluster from scratch. There might be a solution available for restarting a cluster in the future, more info here: https://github.com/kubernetes-sigs/kind/issues/148
+
+So for now, if you get any connection errors from kubectl, like "Unable to connect to the server" it might indicate that the cluster needs to be re-created.
