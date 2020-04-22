@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: workflow-controller-configmap
+data:
+  config: |
+    containerRuntimeExecutor: k8sapi # Kind and Docker does not seem to work nice together on Windows, so switched to the k8s api which seems to work
