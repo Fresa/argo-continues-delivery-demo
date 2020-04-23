@@ -7,4 +7,4 @@ Else {
 }
 
 Write-Host "Creating admin user for 'kubernetes-dashboard'"
-kubectl apply -f .\serviceaccount.yaml
+kubectl apply -f "$PSScriptRoot\serviceaccount.yaml"

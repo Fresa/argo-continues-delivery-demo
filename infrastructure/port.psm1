@@ -10,4 +10,13 @@ class Port
 		Receive-Job $jobName
 		Write-Host "Service $Service in namespace $Namespace now available at 127.0.0.1:$From"
 	}
+
+	static [void]Stop($Service) 
+	{
+		Write-Host "Stopping port forwarding for service $Service..."
+		$jobName = "$($Service)PortForward"
+		Get-Job -name "$jobName*" | Stop-Job
+		Get-Job -name "$jobName*" | Remove-Job
+		Write-Host "Port forwarding for service $Service has stopped"
+	}
 }
