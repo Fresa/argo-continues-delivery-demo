@@ -29,4 +29,7 @@ Run "argo\cd\start-ui.ps1"
 Run "argo\events\port-forward-gateway.ps1"
 
 Write-Host
-Get-Job
+Get-Job | ForEach-Object {
+    Write-Host $_.Name
+    Receive-Job $_ -Keep
+}

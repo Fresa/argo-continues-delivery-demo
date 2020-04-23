@@ -7,7 +7,7 @@ class Port
 		Start-Job -Name $jobName -InputObject $command -ScriptBlock { 
 			Invoke-Expression $input
 		}
-		Receive-Job $jobName
+		Receive-Job $jobName -Keep
 		Write-Host "Service $Service in namespace $Namespace now available at 127.0.0.1:$From"
 	}
 
