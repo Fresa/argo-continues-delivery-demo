@@ -3,6 +3,6 @@ kubectl apply -f https://raw.githubusercontent.com/argoproj/argo-events/master/h
 kubectl -n argo-events create secret generic git-ssh --from-file=key=$HOME/.ssh/github
 kubectl -n argo-events create secret generic git-known-hosts --from-file=ssh_known_hosts=$HOME/.ssh/known_hosts
 
-kubectl apply -f "$PSScriptRoot\ci-webhook.yaml"
-kubectl apply -f "$PSScriptRoot\ci-webhook-gateway.yaml"
-kubectl apply -f "$PSScriptRoot\ci-webhook-sensor.yaml"
+kubectl apply -n argo-events -f "$PSScriptRoot\ci-webhook.yaml"
+kubectl apply -n argo-events -f "$PSScriptRoot\ci-webhook-gateway.yaml"
+kubectl apply -n argo-events -f "$PSScriptRoot\ci-webhook-sensor.yaml"
