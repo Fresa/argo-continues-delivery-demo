@@ -34,6 +34,7 @@ spec:
               metadata:
                 generateName: demo-ci-
               spec:
+                serviceAccountName: argo-events-sa
                 entrypoint: demo-ci
                 arguments:
                   parameters:
@@ -41,45 +42,35 @@ spec:
                     value: SET_FROM_PARAMETER
                   - name: revision
                     value: SET_FROM_PARAMETER
+                  - name: ref
+                    value: SET_FROM_PARAMETER
 
                 templates:
                 - name: demo-ci
                   steps:
+                    # todo: Add git checkout step to checkout the commit referenced in the git push event
                   - - name: build
                       template: build
-                      when: "{{workflow.parameters.revision}} != 0000000000000000000000000000000000000000" # No commit SHA = only tag was pushed
+                      when: "'{{workflow.parameters.revision}}' != '0000000000000000000000000000000000000000'" # No commit SHA = only tag was pushed
 
                 - name: build
                   container:
-                    image: docker:19.03-git
-                    command: [sh, -c]
-                    args: ["
-                      until docker ps; 
-                      do sleep 3; 
-                      done;
-                      docker build -t demowebapp:{{workflow.parameters.revision}} {{workflow.parameters.repo}}#{{workflow.parameters.revision}}
-                    "]
-                    env:
-                    - name: DOCKER_HOST               # the docker daemon can be access on the standard port on localhost
-                      value: 127.0.0.1
-                  sidecars:
-                  - name: dind
-                    image: docker:19.03-dind          # Docker already provides an image for running a Docker daemon
-                    securityContext:
-                      privileged: true                # the Docker daemon can only run in a privileged container
-                    # mirrorVolumeMounts will mount the same volumes specified in the main container
-                    # to the sidecar (including artifacts), at the same mountPaths. This enables
-                    # dind daemon to (partially) see the same filesystem as the main container in
-                    # order to use features such as docker volume binding.
-                    mirrorVolumeMounts: true
+                    image: gcr.io/kaniko-project/executor:v0.15.0
+                    args: ["--dockerfile=Dockerfile",
+                          "--context={{workflow.parameters.repo}}#{{workflow.parameters.ref}}",
+                          "--no-push"]
 
       # Apply parameters at the template level.
       parameters:
         - src:
             dependencyName: code-pushed
-            dataKey: repository.clone_url
-          dest: k8s.source.resource.spec.arguments.0.value
+            dataKey: body.repository.git_url
+          dest: k8s.source.resource.spec.arguments.parameters.0.value
         - src:
             dependencyName: code-pushed
-            dataKey: after # The commit SHA after push
-          dest: k8s.source.resource.spec.arguments.1.value
+            dataKey: body.after # The commit SHA after push
+          dest: k8s.source.resource.spec.arguments.parameters.1.value
+        - src:
+            dependencyName: code-pushed
+            dataKey: body.ref
+          dest: k8s.source.resource.spec.arguments.parameters.2.value
