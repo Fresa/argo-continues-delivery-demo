@@ -26,9 +26,14 @@ Run "k8s\dashboard\install.ps1"
 Run "k8s\dashboard\start.ps1"
 Run "k8s\dashboard\get-token.ps1"
 
+Run "docker\registry\install.ps1"
+
+# Port forward
 Run "argo\workflow\start-ui.ps1"
 Run "argo\cd\start-ui.ps1"
 Run "argo\events\port-forward-gateway.ps1"
+
+Run "docker\registry\port-forward.ps1"
 
 Write-Host
 Get-Job | ForEach-Object {
