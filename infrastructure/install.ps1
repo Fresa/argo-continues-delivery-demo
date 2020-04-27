@@ -13,6 +13,8 @@ Run "argo\workflow\stop-ui.ps1"
 Run "argo\cd\stop-ui.ps1"
 Run "argo\events\stop-port-forwarding-gateway.ps1"
 
+Run "docker\registry\stop-port-forwarding.ps1"
+
 Run "kind\delete-cluster.ps1"
 
 # Install
