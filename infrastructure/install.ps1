@@ -4,6 +4,8 @@ function Run($relativePath) {
     Write-Host
 }
 
+choco install kubernetes-cli
+
 # Clean up
 Run "k8s\dashboard\stop.ps1"
 
