@@ -1,1 +1,7 @@
-kind create cluster --name argo-demo
+param(
+    [parameter(Mandatory=$true,
+        HelpMessage="The name of the cluster")]
+    [String]$name
+)
+
+kind create cluster --name $name

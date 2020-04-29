@@ -5,7 +5,7 @@ param(
 )
 Write-Host "Downloading version $version"
 
-$filename = "argocd.exe"
+$filename = "$PSScriptRoot/argocd.exe"
 if (Test-Path $filename){
     Write-Host "$filename already exists"    
     return;

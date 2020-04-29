@@ -1,1 +1,7 @@
-kind delete cluster --name argo-demo
+param(
+    [parameter(Mandatory=$true,
+        HelpMessage="The name of the cluster")]
+    [String]$name
+)
+
+kind delete cluster --name $name
