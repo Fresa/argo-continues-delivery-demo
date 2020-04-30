@@ -5,7 +5,7 @@ param(
 )
 
 $command = "kubectl proxy --port=$port"
-Start-Job -Name KubernetesProxy-$port -InputObject $command -ScriptBlock { 
+Start-Job -Name KubernetesProxy -InputObject $command -ScriptBlock { 
     Invoke-Expression $input
 }
 Write-Host "Dashboard available at: http://localhost:$port/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/#/login"

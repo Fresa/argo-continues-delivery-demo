@@ -25,7 +25,11 @@ $clusters | ForEach-Object {
 kubectl config use-context "kind-argo-demo-ci"
 Run "argo\events\install.ps1"
 Run "argo\workflow\install.ps1"
-Run "argo\cd\install.ps1"
+
+[KindClusters]::GetApplicationClusters() | ForEach-Object {
+    kubectl config use-context $_.Context
+    Run "argo\cd\install.ps1"
+}
 
 Run "docker\registry\install.ps1"
 
@@ -40,6 +44,6 @@ Run "port-forward.ps1"
 
 Write-Host
 Get-Job | ForEach-Object {
-    Write-Host $_.Name -ForegroundColor Green
+    Write-Host "$($_.Id) | $($_.Name) | State: $($_.State)" -ForegroundColor Green
     Receive-Job $_
 }

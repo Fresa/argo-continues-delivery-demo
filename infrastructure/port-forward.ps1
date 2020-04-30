@@ -10,10 +10,16 @@ $clusters = [KindClusters]::new()
 
 kubectl config use-context "kind-argo-demo-ci"
 Run "argo\workflow\start-ui.ps1"
-Run "argo\cd\start-ui.ps1"
 Run "argo\events\port-forward-gateway.ps1"
 
 Run "docker\registry\port-forward.ps1"
+
+$port = 8080
+[KindClusters]::GetApplicationClusters() | ForEach-Object {
+    kubectl config use-context $_.Context
+    Run "argo\cd\start-ui.ps1" -port $port
+    $port++
+}
 
 $clusters | ForEach-Object {
     kubectl config use-context $_.Context
