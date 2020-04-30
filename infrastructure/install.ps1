@@ -1,22 +1,24 @@
+Using module ".\kind-clusters.psm1"
+
 function Run($relativePath) {
     Write-Host
     & "$PSScriptRoot\$relativePath" @args
     Write-Host
 }
 
-$clusters = & "$PSScriptRoot\get-clusters.ps1"
+$clusters = [KindClusters]::new()
 
 choco install kubernetes-cli
 
 # Clean up
 Run "stop-port-forwarding.ps1"
 
-$clusters.Values | ForEach-Object { 
+$clusters | ForEach-Object { 
     Run "kind\delete-cluster.ps1" -name $_.Name
 }
 
 # Install
-$clusters.Values | ForEach-Object { 
+$clusters | ForEach-Object { 
     Run "kind\create-cluster.ps1" -name $_.Name 
 }
 
@@ -27,7 +29,7 @@ Run "argo\cd\install.ps1"
 
 Run "docker\registry\install.ps1"
 
-$clusters.Values | ForEach-Object {
+$clusters | ForEach-Object {
     kubectl config use-context $_.Context
     Run "k8s\dashboard\install.ps1"
     Run "k8s\dashboard\get-token.ps1"
