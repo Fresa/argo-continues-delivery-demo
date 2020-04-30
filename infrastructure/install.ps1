@@ -29,6 +29,7 @@ Run "argo\workflow\install.ps1"
 [KindClusters]::GetApplicationClusters() | ForEach-Object {
     kubectl config use-context $_.Context
     Run "argo\cd\install.ps1"
+    Run "argo\cd\create-demo-app.ps1" -environment $_.Environment -port $_.ArgoCDPort
 }
 
 Run "docker\registry\install.ps1"

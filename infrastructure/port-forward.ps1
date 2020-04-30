@@ -14,11 +14,9 @@ Run "argo\events\port-forward-gateway.ps1"
 
 Run "docker\registry\port-forward.ps1"
 
-$port = 8080
 [KindClusters]::GetApplicationClusters() | ForEach-Object {
     kubectl config use-context $_.Context
-    Run "argo\cd\start-ui.ps1" -port $port
-    $port++
+    Run "argo\cd\start-ui.ps1" -port $_.ArgoCDPort
 }
 
 $clusters | ForEach-Object {
