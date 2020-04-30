@@ -4,7 +4,7 @@ function Run($relativePath) {
     Write-Host
 }
 
-Run "define-variables.ps1"
+$clusters = & "$PSScriptRoot\get-clusters.ps1"
 
 kubectl config use-context "kind-argo-demo-ci"
 Run "argo\workflow\start-ui.ps1"
@@ -13,11 +13,9 @@ Run "argo\events\port-forward-gateway.ps1"
 
 Run "docker\registry\port-forward.ps1"
 
-$port = 8001
-$contexts | ForEach-Object {
-    kubectl config use-context $_
-    Run "k8s\dashboard\start.ps1" -port $port
-    $port++
+$clusters.Values | ForEach-Object {
+    kubectl config use-context $_.Context
+    Run "k8s\dashboard\start.ps1" -port $_.Port
 }
 
 Write-Host

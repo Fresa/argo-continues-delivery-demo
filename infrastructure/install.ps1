@@ -4,20 +4,20 @@ function Run($relativePath) {
     Write-Host
 }
 
-Run "define-variables.ps1"
+$clusters = & "$PSScriptRoot\get-clusters.ps1"
 
 choco install kubernetes-cli
 
 # Clean up
 Run "stop-port-forwarding.ps1"
 
-$clusters | ForEach-Object { 
-    Run "kind\delete-cluster.ps1" -name $_ 
+$clusters.Values | ForEach-Object { 
+    Run "kind\delete-cluster.ps1" -name $_.Name
 }
 
 # Install
-$clusters | ForEach-Object { 
-    Run "kind\create-cluster.ps1" -name $_ 
+$clusters.Values | ForEach-Object { 
+    Run "kind\create-cluster.ps1" -name $_.Name 
 }
 
 kubectl config use-context "kind-argo-demo-ci"
@@ -27,8 +27,8 @@ Run "argo\cd\install.ps1"
 
 Run "docker\registry\install.ps1"
 
-$contexts | ForEach-Object {
-    kubectl config use-context $_
+$clusters.Values | ForEach-Object {
+    kubectl config use-context $_.Context
     Run "k8s\dashboard\install.ps1"
     Run "k8s\dashboard\get-token.ps1"
 }
@@ -38,6 +38,6 @@ Run "port-forward.ps1"
 
 Write-Host
 Get-Job | ForEach-Object {
-    Write-Host $_.Name
-    Receive-Job $_ -Keep
+    Write-Host $_.Name -ForegroundColor Green
+    Receive-Job $_
 }
