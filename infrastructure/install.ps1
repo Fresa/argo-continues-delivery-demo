@@ -6,6 +6,9 @@ function Run($relativePath) {
     Write-Host
 }
 
+if (-not(Get-Command choco -ErrorAction SilentlyContinue)) {
+    Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+}
 $clusters = [KindClusters]::new()
 
 choco install kubernetes-cli
@@ -37,7 +40,6 @@ Run "docker\registry\install.ps1"
 $clusters | ForEach-Object {
     kubectl config use-context $_.Context
     Run "k8s\dashboard\install.ps1"
-    Run "k8s\dashboard\get-token.ps1"
 }
 
 # Port forward
