@@ -1,11 +1,14 @@
 class Port
 {
-	static [void]Forward($Service, $Namespace, $From, $To) 
+	static [void]Forward($Service, $Namespace, $From, $To, $Timeout="1m") 
 	{
 		$jobName = "$($Service)PortForward"
-		$command = "kubectl port-forward $Service $($From):$($To) --namespace $($Namespace)"		
+		$command = "kubectl port-forward --pod-running-timeout=$Timeout $Service $($From):$($To) --namespace $($Namespace)"
 		Start-Job -Name $jobName -InputObject $command -ScriptBlock { 
-			Invoke-Expression $input
+			while ($true)
+			{
+				Invoke-Expression $input
+			}
 		}
 		Receive-Job $jobName
 		Write-Host "Service $Service in namespace $Namespace now available at 127.0.0.1:$From"
