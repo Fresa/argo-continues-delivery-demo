@@ -35,7 +35,7 @@ spec:
       ports:
         - port: 12000
           targetPort: 12000
-      type: LoadBalancer
+      type: ClusterIP
   subscribers:
     http:
       - "http://code-pushed-sensor.argo-events.svc:9300/"
