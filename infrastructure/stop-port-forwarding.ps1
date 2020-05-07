@@ -1,13 +1,17 @@
-function Run($relativePath) {
-    Write-Host
-    & "$PSScriptRoot\$relativePath" @args
-    Write-Host
+Using module ".\kind-clusters.psm1"
+
+$clusters = [KindClusters]::new()
+$applicationClusters = $clusters.GetApplicationClusters()
+$ciCluster = $clusters.GetCICluster()
+
+$ciCluster.ArgoServer.StopPortForwarding()
+$ciCluster.CodePushedGateway.StopPortForwarding()
+$ciCluster.DockerRegistry.StopPortForwarding()
+
+$applicationClusters | ForEach-Object {
+    $_.ArgoCDServer.StopPortForwarding()
 }
 
-Run "argo\workflow\stop-ui.ps1"
-Run "argo\cd\stop-ui.ps1"
-Run "argo\events\stop-port-forwarding-gateway.ps1"
-
-Run "docker\registry\stop-port-forwarding.ps1"
-
-Run "k8s\dashboard\stop.ps1"
+$clusters | ForEach-Object {
+    $_.Dashboard.StopPortForwarding()
+}

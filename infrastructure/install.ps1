@@ -9,7 +9,10 @@ function Run($relativePath) {
 if (-not(Get-Command choco -ErrorAction SilentlyContinue)) {
     Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 }
+
 $clusters = [KindClusters]::new()
+$applicationClusters = $clusters.GetApplicationClusters()
+$ciCluster = $clusters.GetCICluster()
 
 choco install kubernetes-cli
 
@@ -25,28 +28,36 @@ $clusters | ForEach-Object {
     Run "kind\create-cluster.ps1" -name $_.Name 
 }
 
-kubectl config use-context "kind-argo-demo-ci"
+$ciCluster.UseContext()
 Run "argo\events\install.ps1"
 Run "argo\workflow\install.ps1"
 
-[KindClusters]::GetApplicationClusters() | ForEach-Object {
-    kubectl config use-context $_.Context
+$applicationClusters | ForEach-Object {
+    $_.UseContext()
     Run "argo\cd\install.ps1"
-    Run "argo\cd\create-demo-app.ps1" -environment $_.Environment -port $_.ArgoCDPort
 }
 
 Run "docker\registry\install.ps1"
 
 $clusters | ForEach-Object {
-    kubectl config use-context $_.Context
+    $_.UseContext()
     Run "k8s\dashboard\install.ps1"
 }
+
+# Create CI
+$ciCluster.UseContext()
+Run "argo\events\setup-ci.ps1"
 
 # Port forward
 Run "port-forward.ps1"
 
+# Create CD
+$applicationClusters | ForEach-Object {
+    $_.UseContext()
+    Run "argo\cd\create-demo-app.ps1" -environment $_.Environment -argoCDServer $_.ArgoCDServer
+}
+
 Write-Host
 Get-Job | ForEach-Object {
     Write-Host "$($_.Id) | $($_.Name) | State: $($_.State)" -ForegroundColor Green
-    Receive-Job $_
 }

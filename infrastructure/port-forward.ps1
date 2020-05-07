@@ -1,31 +1,41 @@
 Using module ".\kind-clusters.psm1"
 
-function Run($relativePath) {
-    Write-Host
-    & "$PSScriptRoot\$relativePath" @args
-    Write-Host
-}
-
 $clusters = [KindClusters]::new()
+$applicationClusters = $clusters.GetApplicationClusters()
+$ciCluster = $clusters.GetCICluster()
 
-kubectl config use-context "kind-argo-demo-ci"
-Run "argo\workflow\start-ui.ps1"
-Run "argo\events\port-forward-gateway.ps1"
+# Start port forwarding
+$ciCluster.UseContext()
+$ciCluster.ArgoServer.PortForward()
+Write-Host
+$ciCluster.CodePushedGateway.PortForward()
+Write-Host
+$ciCluster.DockerRegistry.PortForward()
+Write-Host
 
-Run "docker\registry\port-forward.ps1"
-
-[KindClusters]::GetApplicationClusters() | ForEach-Object {
-    kubectl config use-context $_.Context
-    Run "argo\cd\start-ui.ps1" -port $_.ArgoCDPort
+$applicationClusters | ForEach-Object {
+    $_.UseContext()
+    $_.ArgoCDServer.PortForward()
+    Write-Host
 }
 
 $clusters | ForEach-Object {
-    kubectl config use-context $_.Context
-    Run "k8s\dashboard\start.ps1" -port $_.Port
+    $_.UseContext()
+    $_.Dashboard.PortForward()
+    Write-Host
 }
 
+# Wait until services are available
+$ciCluster.UseContext()
+$ciCluster.ArgoServer.WaitUntilAvailable()
 Write-Host
-Get-Job | ForEach-Object {
-    Write-Host $_.Name -ForegroundColor Green
-    Receive-Job $_
+$ciCluster.CodePushedGateway.WaitUntilAvailable()
+Write-Host
+$ciCluster.DockerRegistry.WaitUntilAvailable()
+Write-Host
+
+$applicationClusters | ForEach-Object {
+    $_.UseContext()
+    $_.ArgoCDServer.WaitUntilAvailable()
+    Write-Host
 }

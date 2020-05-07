@@ -1,45 +1,97 @@
-class KindCluster {
+Using module ".\argo\cd\argo-cd-server.psm1"
+Using module ".\k8s\dashboard\k8s-dashboard.psm1"
+Using module ".\argo\workflow\argo-server.psm1"
+Using module ".\argo\events\code-pushed-gateway.psm1"
+Using module ".\docker\registry\docker-registry.psm1"
+
+class KindCluster 
+{
     [string]$Name
     [string]$Context
-    [int]$Port
     [string]$Environment
+    [K8sDashboard]$Dashboard
 
     KindCluster(
-        [int]$port,
-        [string]$environment
-    ){
+        [string]$environment,
+        [K8sDashboard]$dashboard
+    )
+    {
         $this.Name = "argo-demo-$environment"
         $this.Context = "kind-$($this.Name)"
-        $this.Port = $port
+        $this.Dashboard = $dashboard
         $this.Environment = $environment
+    }
+
+    [void] UseContext() 
+    {
+        if ((kubectl config current-context) -ne $this.Context)
+        {
+            kubectl config use-context $this.Context
+        }
     }
 }
 
-class KindApplicationCluster : KindCluster{
-    [int]$ArgoCDPort
+class KindApplicationCluster : KindCluster
+{
+    [ArgoCDServer]$ArgoCDServer
 
     KindApplicationCluster(
-        [int]$port,
         [string]$environment,
-        [int]$ArgoCDPort
-    ) : base($port, $environment) {
-        $this.ArgoCDPort = $ArgoCDPort
+        [K8sDashboard]$dashboard,
+        [ArgoCDServer]$ArgoCDServer
+    ) : base($environment, $dashboard) 
+    {
+        $this.ArgoCDServer = $ArgoCDServer
+    }
+}
+
+class KindCICluster : KindCluster
+{
+    [ArgoServer]$ArgoServer
+    [CodePushedGateway]$CodePushedGateway
+    [DockerRegistry]$DockerRegistry
+
+    KindCICluster(
+        [string]$environment,
+        [K8sDashboard]$dashboard,
+        [ArgoServer]$ArgoServer,
+        [DockerRegistry]$dockerRegistry,
+        [CodePushedGateway]$codePushedGateway
+    ) : base($environment, $dashboard) 
+    {
+        $this.ArgoServer = $ArgoServer
+        $this.DockerRegistry = $dockerRegistry
+        $this.CodePushedGateway = $codePushedGateway
     }
 }
 
 class KindClusters : System.Collections.ArrayList
 {
-    KindClusters(){
-        $this.Add([KindCluster]::new(8001, "ci"))
-        $this.Add([KindApplicationCluster]::new(8002, "test", 8080))
-        $this.Add([KindApplicationCluster]::new(8003, "prod", 8081))
+    KindClusters()
+    {
+        $this.Add([KindCICluster]::new(
+            "ci",
+            [K8sDashboard]::new(8001),
+            [ArgoServer]::new(),
+            [DockerRegistry]::new(),
+            [CodePushedGateway]::new()))
+        $this.Add([KindApplicationCluster]::new(
+            "test", 
+            [K8sDashboard]::new(8002), 
+            [ArgoCDServer]::new(8080)))
+        $this.Add([KindApplicationCluster]::new(
+            "prod", 
+            [K8sDashboard]::new(8003), 
+            [ArgoCDServer]::new(8081)))
     }
 
-    [System.Collections.ArrayList] static GetApplicationClusters(){
-        return [KindClusters]::new() | Where-Object { $_.Environment -ne "ci" }
+    [System.Collections.ArrayList] GetApplicationClusters()
+    {
+        return $this | Where-Object { $_.Environment -ne "ci" }
     }
 
-    [KindCluster] static GetCICluster(){
-        return [KindClusters]::new() | Where-Object { $_.Environment -eq "ci" } | Select-Object -First 1
+    [KindCICluster] GetCICluster()
+    {
+        return $this | Where-Object { $_.Environment -eq "ci" } | Select-Object -First 1
     }
 }
