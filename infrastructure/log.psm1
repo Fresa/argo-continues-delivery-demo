@@ -2,11 +2,16 @@ Using module ".\call-context.psm1"
 
 class Log
 {
-    [Type] $Class
+    [string] $ClassName
 
     Log([Type] $class)
     {
-        $this.Class = $class
+        $this.ClassName = $class.Name
+    }
+
+    Log([string] $className)
+    {
+        $this.ClassName = $className
     }
 
     [void] Info([string]$message)
@@ -31,6 +36,6 @@ class Log
 
     [string] GetLogMessage([string]$message)
     {
-        return "[$(Get-Date -Format ""HH:mm:ss"")] [$([CallContext]::GetFrom($($this.Class), 3))] $message"
+        return "[$(Get-Date -Format ""HH:mm:ss"")] [$([CallContext]::GetFrom($($this.ClassName), 3))] $message"
     }
 }

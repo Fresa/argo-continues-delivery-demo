@@ -21,7 +21,7 @@ class Port
 		Start-Job -Name $jobName -ScriptBlock { 
 			param($command, $originalCall, $timeoutInSeconds, $logModulePath)
 			Import-Module $logModulePath
-			$log = & (Get-Module Log) { [Log]::new([Log]) }
+			$log = & (Get-Module Log) { [Log]::new("Port.Forward") }
 			
 			$wait = New-TimeSpan -Seconds $timeoutInSeconds
 			$stopWatch = New-Object -TypeName System.Diagnostics.Stopwatch
