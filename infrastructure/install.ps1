@@ -20,12 +20,12 @@ choco install kubernetes-cli
 Run "stop-port-forwarding.ps1"
 
 $clusters | ForEach-Object { 
-    Run "kind\delete-cluster.ps1" -name $_.Name
+    $_.Delete()
 }
 
 # Install
 $clusters | ForEach-Object { 
-    Run "kind\create-cluster.ps1" -name $_.Name 
+    $_.Create()
 }
 
 $ciCluster.UseContext()

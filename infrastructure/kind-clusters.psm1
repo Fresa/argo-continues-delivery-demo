@@ -29,6 +29,16 @@ class KindCluster
             kubectl config use-context $this.Context
         }
     }
+
+    [void] Create()
+    {
+        kind create cluster --name $this.Name
+    }
+
+    [void] Delete()
+    {
+        kind delete cluster --name $this.Name
+    }
 }
 
 class KindApplicationCluster : KindCluster
