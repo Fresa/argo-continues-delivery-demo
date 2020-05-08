@@ -1,4 +1,4 @@
-Using module "..\..\port.psm1"
+Using module "..\..\port-forward.psm1"
 
 class CodePushedGateway 
 {
@@ -6,22 +6,28 @@ class CodePushedGateway
     [string]$Namespace = "argo-events"
     [int]$ContainerPort = 12000
     [int]$Port = 12000
+    [PortForward]$PortForwarder
+
+    CodePushedGateway()
+    {
+        $this.PortForwarder = [PortForward]::new("deployment/$($this.Service)", $this.Namespace, $this.Port, $this.ContainerPort)
+    }
 
     [void] PortForward()
     {
-        [Port]::Forward("deployment/$($this.Service)", $this.Namespace, $this.Port, $this.ContainerPort, 120)
+        $this.PortForwarder.Start(120)
     }
 
     [void] StopPortForwarding()
     {
-        [Port]::Stop("deployment/$($this.Service)")
+        $this.PortForwarder.Stop()
     }
 
     [void] WaitUntilAvailable()
     {
-        if (-not([Port]::TryWaitUntilAvailable("http://127.0.0.1:$($this.Port)/pushed")))
+        if (-not($this.PortForwarder.TryWaitUntilAvailable("http://127.0.0.1:$($this.PortForwarder.From)/pushed")))
         {
-            [Port]::OutputInfo("deployment/$($this.Service)")
+            $this.PortForwarder.OutputInfo()
         }
     }
 }

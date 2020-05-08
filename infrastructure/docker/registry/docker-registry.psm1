@@ -1,24 +1,32 @@
-Using module "..\..\port.psm1"
+Using module "..\..\port-forward.psm1"
 
 class DockerRegistry {
     [string]$Service = "docker-registry"
     [string]$Namespace = "default"
     [int]$ContainerPort = 5000
     [int]$Port = 5001
+    [PortForward]$PortForwarder
+
+    DockerRegistry()
+    {
+        $this.PortForwarder = [PortForward]::new("service/$($this.Service)", $this.Namespace, $this.Port, $this.ContainerPort)
+    }
 
     [void] PortForward()
     {
-        [Port]::Forward("service/$($this.Service)", $this.Namespace, $this.Port, $this.ContainerPort, 120)
+        $this.PortForwarder.Start(120)
     }
 
-    [void] StopPortForwarding(){
-        [Port]::Stop("service/$($this.Service)")
+    [void] StopPortForwarding()
+    {
+        $this.PortForwarder.Stop()
     }
 
-    [void] WaitUntilAvailable(){
-        if (-not([Port]::TryWaitUntilAvailable("http://127.0.0.1:$($this.Port)")))
+    [void] WaitUntilAvailable()
+    {
+        if (-not($this.PortForwarder.TryWaitUntilAvailable("http://127.0.0.1:$($this.PortForwarder.From)")))
         {
-            [Port]::OutputInfo("service/$($this.Service)")
+            $this.PortForwarder.OutputInfo()
         }
     }
 }

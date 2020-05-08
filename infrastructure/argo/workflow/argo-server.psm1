@@ -1,24 +1,32 @@
-Using module "..\..\port.psm1"
+Using module "..\..\port-forward.psm1"
 
 class ArgoServer {
     [string]$Service = "argo-server"
     [string]$Namespace = "argo"
     [int]$ContainerPort = 2746
     [int]$Port = 2746
+    [PortForward]$PortForwarder
+
+    ArgoServer()
+    {
+        $this.PortForwarder = [PortForward]::new("deployment/$($this.Service)", $this.Namespace, $this.Port, $this.ContainerPort)
+    }
 
     [void] PortForward()
     {
-        [Port]::Forward("deployment/$($this.Service)", $this.Namespace, $this.Port, $this.ContainerPort, 120)
+        $this.PortForwarder.Start(120)
     }
 
-    [void] StopPortForwarding(){
-        [Port]::Stop("deployment/$($this.Service)")
+    [void] StopPortForwarding()
+    {
+        $this.PortForwarder.Stop()
     }
 
-    [void] WaitUntilAvailable(){
-        if (-not([Port]::TryWaitUntilAvailable("http://127.0.0.1:$($this.Port)")))
+    [void] WaitUntilAvailable()
+    {
+        if (-not($this.PortForwarder.TryWaitUntilAvailable("http://127.0.0.1:$($this.PortForwarder.From)")))
         {
-            [Port]::OutputInfo("deployment/$($this.Service)")
+            $this.PortForwarder.OutputInfo()
         }
     }
 }

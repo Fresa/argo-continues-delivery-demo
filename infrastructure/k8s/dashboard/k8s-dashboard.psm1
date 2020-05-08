@@ -6,6 +6,7 @@ class K8sDashboard
     K8sDashboard([int]$port)
     {
         $this.Port = $port
+        $this.Name = "KubernetesProxy-$port"
     }
 
     [void] PortForward()
@@ -14,7 +15,8 @@ class K8sDashboard
         Start-Job -Name $this.Name -InputObject $command -ScriptBlock { 
             Invoke-Expression $input
         }
-        Write-Host "Dashboard available at: http://localhost:$($this.Port)/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/#/login"
+        Write-Host "Dashboard should soon be available at: http://localhost:$($this.Port)/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/#/login"
+        Write-Host "For more info: Receive-Job -Name $($this.Name)"
     }
 
     [void] StopPortForwarding()
