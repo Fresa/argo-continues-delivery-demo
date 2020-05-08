@@ -16,18 +16,18 @@ class K8sDashboard
     {
         if((kubectl get svc --namespace=kubernetes-dashboard --field-selector=metadata.name==kubernetes-dashboard --ignore-not-found) -ne $null)
         {
-            $this.Log.Info("'kubernetes-dashboard' is installed")
+            $this.Log.Info("'kubernetes-dashboard' is already installed")
         }
         else 
         {
             $this.Log.Info("Installing 'kubernetes-dashboard'")
-            kubectl apply -f "$PSScriptRoot\install.yaml"
+            $this.Log.Info($(kubectl apply -f "install.yaml"))
         }
     }
 
     [string] GetToken()
     {
-        return Invoke-Expression "kubectl -n kubernetes-dashboard describe secret $(kubectl -n kubernetes-dashboard get secret | sls admin-user | ForEach-Object { $_ -Split '\s+' } | Select -First 1)"
+        return $(kubectl -n kubernetes-dashboard describe secret $(kubectl -n kubernetes-dashboard get secret | sls admin-user | ForEach-Object { $_ -Split '\s+' } | Select -First 1))
     }
 
     [void] PortForward()

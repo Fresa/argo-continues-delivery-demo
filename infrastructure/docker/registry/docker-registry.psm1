@@ -1,4 +1,5 @@
 Using module "..\..\port-forward.psm1"
+Using module "..\..\log.psm1"
 
 class DockerRegistry {
     [string]$Service = "docker-registry"
@@ -6,10 +7,18 @@ class DockerRegistry {
     [int]$ContainerPort = 5000
     [int]$Port = 5001
     [PortForward]$PortForwarder
+    [Log]$Log = [Log]::new([DockerRegistry])
 
     DockerRegistry()
     {
         $this.PortForwarder = [PortForward]::new("service/$($this.Service)", $this.Namespace, $this.Port, $this.ContainerPort)
+    }
+
+    [void] Install()
+    {
+        $this.Log.Info($(kubectl apply -f "registry.yaml"))
+        $this.Log.Info($(kubectl apply -f "registry-config-map.yaml"))
+        $this.Log.Info($(kubectl apply -f "registry-service.yaml"))
     }
 
     [void] PortForward()
