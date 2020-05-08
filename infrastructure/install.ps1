@@ -26,23 +26,19 @@ $clusters | ForEach-Object {
 # Install
 $clusters | ForEach-Object { 
     $_.Create()
+    Write-Host
+    $_.Dashboard.Install()
+    Write-Host
 }
 
 $ciCluster.UseContext()
 Run "argo\events\install.ps1"
-Run "argo\workflow\install.ps1"
+$ciCluster.ArgoServer.Install()
+$ciCluster.DockerRegistry.Install()
 
 $applicationClusters | ForEach-Object {
     $_.UseContext()
     Run "argo\cd\install.ps1"
-}
-
-Run "docker\registry\install.ps1"
-
-$clusters | ForEach-Object {
-    $_.UseContext()
-    $_.Dashboard.Install()
-    Write-Host
 }
 
 # Create CI
