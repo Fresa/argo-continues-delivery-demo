@@ -41,7 +41,8 @@ Run "docker\registry\install.ps1"
 
 $clusters | ForEach-Object {
     $_.UseContext()
-    Run "k8s\dashboard\install.ps1"
+    $_.Dashboard.Install()
+    Write-Host
 }
 
 # Create CI
