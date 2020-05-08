@@ -10,7 +10,11 @@ class CodePushedGateway
 
     CodePushedGateway()
     {
-        $this.PortForwarder = [PortForward]::new("deployment/$($this.Service)", $this.Namespace, $this.Port, $this.ContainerPort)
+        $this.PortForwarder = [PortForward]::new(
+            "deployment/$($this.Service)", 
+            $this.Namespace, 
+            $this.Port, 
+            $this.ContainerPort)
     }
 
     [void] PortForward()
@@ -25,7 +29,9 @@ class CodePushedGateway
 
     [void] WaitUntilAvailable()
     {
-        if (-not($this.PortForwarder.TryWaitUntilAvailable("http://127.0.0.1:$($this.PortForwarder.From)/pushed")))
+        if (-not($this.PortForwarder.TryWaitUntilAvailable(
+            "http://127.0.0.1:$($this.PortForwarder.From)", 
+            [system.net.httpstatuscode]::NotFound)))
         {
             $this.PortForwarder.OutputInfo()
         }

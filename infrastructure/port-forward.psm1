@@ -82,32 +82,47 @@ class PortForward
 		[string]$url
 	)
 	{
+		return $this.TryWaitUntilAvailable($url, [system.net.httpstatuscode]::OK)
+	}
+
+	[bool] TryWaitUntilAvailable(
+		[string]$url, 
+		[system.net.httpstatuscode] $expectedStatusCode
+	)
+	{
         $wait = New-TimeSpan -Minutes 2
         $stopWatch = New-Object -TypeName System.Diagnostics.Stopwatch
         $stopWatch.Start()
 
-		$this.Log.Info("Waiting for $url ($($this.Resource)) to return status code 200 within $($wait.ToString('mm\m\:ss\s'))")
+		$this.Log.Info("Waiting for $url ($($this.Resource)) to return status code $expectedStatusCode within $($wait.ToString('mm\m\:ss\s'))")
         $errorRecord = $null
 		while ($stopWatch.Elapsed -le $wait)
 		{
 			try 
 			{
-                $response = wget $url
-				if ($response.StatusCode -eq 200)
-				{
-                    $this.Log.Info("$url is responding", [ConsoleColor]::Green)
-                    return $true
-                }
-                $this.Log.Warning("$url responded with status code: $($response.StatusCode)")
+                $response = wget $url				
 			} 
 			catch 
 			{ 
+				$response = $_.Exception.Response
 				$errorRecord = $_ 
 			}
+
+			if ($response -ne $null)
+			{
+				if ($response.StatusCode -eq $expectedStatusCode)
+				{
+					$this.Log.Info("$url is responding", [ConsoleColor]::Green)
+					return $true
+				}
+
+				$this.Log.Warning("$url responded with status code: $($response.StatusCode), expected $expectedStatusCode")
+			}
+
             Start-Sleep -Seconds 1
         }         
 		
-		$this.Log.Error("Waited $($stopWatch.Elapsed.ToString('mm\m\ ss\s')) for $url ($($this.Resource)) to become reachable, giving up")
+		$this.Log.Error("Waited $($stopWatch.Elapsed.ToString('mm\m\ ss\s')) for $url ($($this.Resource)) to repond with status code $expectedStatusCode, giving up")
 		if ($errorRecord -ne $null)
 		{
 			$this.Log.Error("Last error recorded:")
