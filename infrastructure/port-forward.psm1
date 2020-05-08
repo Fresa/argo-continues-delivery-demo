@@ -57,7 +57,7 @@ class PortForward
 			$log.Error("Port forward timed out ($($stopWatch.Elapsed.ToString('mm\m\ ss\s'))), giving up")
 			$log.Info("To port forward again run:")
 			$log.Info($originalCall)
-		} -ArgumentList $command, $originalCall, $timeoutInSeconds, "$(Get-Location)\log.psm1"
+		} -ArgumentList $command, $originalCall, $timeoutInSeconds, "$PSScriptRoot\log.psm1"
 
 		$this.Log.Info("Resource $($this.Resource) in namespace $($this.Namespace) should soon be available at 127.0.0.1:$($this.From)")
 		$this.Log.Info("Call ""Receive-Job -Name $($this.JobName)"" to get more info")
