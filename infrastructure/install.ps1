@@ -33,7 +33,7 @@ $clusters | ForEach-Object {
 
 $ciCluster.UseContext()
 Run "argo\events\install.ps1"
-$ciCluster.ArgoServer.Install()
+$ciCluster.Argo.Install()
 $ciCluster.DockerRegistry.Install()
 
 $applicationClusters | ForEach-Object {

@@ -1,5 +1,6 @@
 Using module ".\argo\cd\argo-cd-server.psm1"
 Using module ".\k8s\dashboard\k8s-dashboard.psm1"
+Using module ".\argo\workflow\argo.psm1"
 Using module ".\argo\workflow\argo-server.psm1"
 Using module ".\argo\events\code-pushed-gateway.psm1"
 Using module ".\docker\registry\docker-registry.psm1"
@@ -57,6 +58,7 @@ class KindApplicationCluster : KindCluster
 
 class KindCICluster : KindCluster
 {
+    [Argo]$Argo = [Argo]::new()
     [ArgoServer]$ArgoServer
     [CodePushedGateway]$CodePushedGateway
     [DockerRegistry]$DockerRegistry
