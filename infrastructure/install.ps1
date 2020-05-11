@@ -32,7 +32,7 @@ $clusters | ForEach-Object {
 }
 
 $ciCluster.UseContext()
-Run "argo\events\install.ps1"
+$ciCluster.ArgoEvents.Install()
 $ciCluster.Argo.Install()
 $ciCluster.DockerRegistry.Install()
 
@@ -40,10 +40,6 @@ $applicationClusters | ForEach-Object {
     $_.UseContext()
     Run "argo\cd\install.ps1"
 }
-
-# Create CI
-$ciCluster.UseContext()
-Run "argo\events\setup-ci.ps1"
 
 # Port forward
 Run "port-forward.ps1"
