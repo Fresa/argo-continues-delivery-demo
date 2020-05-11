@@ -14,6 +14,7 @@ $clusters = [KindClusters]::new()
 $applicationClusters = $clusters.GetApplicationClusters()
 $ciCluster = $clusters.GetCICluster()
 
+choco install kind
 choco install kubernetes-cli
 
 # Clean up
