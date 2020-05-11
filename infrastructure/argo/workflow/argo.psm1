@@ -6,8 +6,8 @@ class Argo {
     [void] Install()
     {
         $this.Log.Info($(kubectl create namespace argo))
-        $this.Log.Info($(kubectl apply -n argo -f "install.yaml"))
-        $this.Log.Info($(kubectl apply -n argo -f "workflow-controller-config-map.yaml"))
+        $this.Log.Info($(kubectl apply -n argo -f "$PSScriptRoot\install.yaml"))
+        $this.Log.Info($(kubectl apply -n argo -f "$PSScriptRoot\workflow-controller-config-map.yaml"))
         
         $this.Log.Info($(kubectl create rolebinding default-admin --clusterrole=admin --serviceaccount=default:default))
     }

@@ -21,7 +21,7 @@ class K8sDashboard
         else 
         {
             $this.Log.Info("Installing 'kubernetes-dashboard'")
-            $this.Log.Info($(kubectl apply -f "install.yaml"))
+            $this.Log.Info($(kubectl apply -f "$PSScriptRoot\install.yaml"))
         }
     }
 

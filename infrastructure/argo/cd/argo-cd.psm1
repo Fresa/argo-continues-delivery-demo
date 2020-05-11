@@ -6,7 +6,7 @@ class ArgoCD {
     [void] Install()
     {
         $this.Log.Info($(kubectl create namespace argocd))
-        $this.Log.Info($(kubectl apply -n argocd -f "install.yaml"))
+        $this.Log.Info($(kubectl apply -n argocd -f "$PSScriptRoot\install.yaml"))
     }
 
     [void] DownloadCLI(

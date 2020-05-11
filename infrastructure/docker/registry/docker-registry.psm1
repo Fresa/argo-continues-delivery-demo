@@ -16,9 +16,9 @@ class DockerRegistry {
 
     [void] Install()
     {
-        $this.Log.Info($(kubectl apply -f "registry.yaml"))
-        $this.Log.Info($(kubectl apply -f "registry-config-map.yaml"))
-        $this.Log.Info($(kubectl apply -f "registry-service.yaml"))
+        $this.Log.Info($(kubectl apply -f "$PSScriptRoot\registry.yaml"))
+        $this.Log.Info($(kubectl apply -f "$PSScriptRoot\registry-config-map.yaml"))
+        $this.Log.Info($(kubectl apply -f "$PSScriptRoot\registry-service.yaml"))
     }
 
     [void] PortForward()

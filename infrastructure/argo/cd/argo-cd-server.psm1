@@ -39,7 +39,7 @@ class ArgoCDServer
 
     [void] Login()
     {
-        $this.Log.Info($(argocd login 127.0.0.1:$this.PortForwarder.From --insecure --username admin --password $this.GetPassword()))
+        $this.Log.Info($(argocd login 127.0.0.1:$($this.PortForwarder.From) --insecure --username admin --password $($this.GetPassword())))
     }
 
     [string] GetPassword()
@@ -52,7 +52,6 @@ class ArgoCDServer
     )
     {
         $this.Login()
-        $this.Log.Info($(kubectl apply -n argocd -f "application-$environment.yaml"))
-        $this.Log.Info($(argocd app create demo --repo https://github.com/Fresa/argo-continues-delivery-demo-config.git --path helm --dest-server https://kubernetes.default.svc --dest-namespace default --upsert))
+        $this.Log.Info($(kubectl apply -n argocd -f "$PSScriptRoot\application-$environment.yaml"))
     }
 }
