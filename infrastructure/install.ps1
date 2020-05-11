@@ -34,20 +34,21 @@ $clusters | ForEach-Object {
 $ciCluster.UseContext()
 $ciCluster.ArgoEvents.Install()
 $ciCluster.Argo.Install()
+$ciCluster.Argo.DownloadCLI("2.7.5")
 $ciCluster.DockerRegistry.Install()
 
 $applicationClusters | ForEach-Object {
     $_.UseContext()
-    Run "argo\cd\install.ps1"
+    $_.ArgoCD.Install()
+    $_.ArgoCD.DownloadCLI("1.4.3")
 }
 
-# Port forward
 Run "port-forward.ps1"
 
 # Create CD
 $applicationClusters | ForEach-Object {
     $_.UseContext()
-    Run "argo\cd\create-demo-app.ps1" -environment $_.Environment -argoCDServer $_.ArgoCDServer
+    $_.CreateDemoApp()
 }
 
 Write-Host

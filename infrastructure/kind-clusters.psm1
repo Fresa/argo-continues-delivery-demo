@@ -1,5 +1,6 @@
 Using module ".\k8s\dashboard\k8s-dashboard.psm1"
 Using module ".\docker\registry\docker-registry.psm1"
+Using module ".\argo\cd\argo-cd.psm1"
 Using module ".\argo\cd\argo-cd-server.psm1"
 Using module ".\argo\workflow\argo.psm1"
 Using module ".\argo\workflow\argo-server.psm1"
@@ -45,15 +46,21 @@ class KindCluster
 
 class KindApplicationCluster : KindCluster
 {
+    [ArgoCD]$ArgoCD = [ArgoCD]::new()
     [ArgoCDServer]$ArgoCDServer
 
     KindApplicationCluster(
         [string]$environment,
         [K8sDashboard]$dashboard,
-        [ArgoCDServer]$ArgoCDServer
+        [ArgoCDServer]$argoCDServer
     ) : base($environment, $dashboard) 
     {
-        $this.ArgoCDServer = $ArgoCDServer
+        $this.ArgoCDServer = $argoCDServer
+    }
+
+    [void] CreateDemoApp()
+    {
+        $this.ArgoCDServer.CreateDemoApp($this.Environment)
     }
 }
 
