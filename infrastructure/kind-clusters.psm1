@@ -6,6 +6,7 @@ Using module ".\argo\workflow\argo.psm1"
 Using module ".\argo\workflow\argo-server.psm1"
 Using module ".\argo\events\argo-events.psm1"
 Using module ".\argo\events\code-pushed-gateway.psm1"
+Using module ".\log.psm1"
 
 class KindCluster 
 {
@@ -13,6 +14,8 @@ class KindCluster
     [string]$Context
     [string]$Environment
     [K8sDashboard]$Dashboard
+
+    [Log] $Log = [Log]::new([KindCluster])
 
     KindCluster(
         [string]$environment,
@@ -29,7 +32,7 @@ class KindCluster
     {
         if ((kubectl config current-context) -ne $this.Context)
         {
-            kubectl config use-context $this.Context
+           $this.Log.Info($(kubectl config use-context $this.Context))
         }
     }
 
