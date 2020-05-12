@@ -38,20 +38,31 @@ class PortForward
 			$log = & (Get-Module Log) { [Log]::new("PortForward.Run") }
 			
 			$wait = New-TimeSpan -Seconds $timeoutInSeconds
-			$stopWatch = New-Object -TypeName System.Diagnostics.Stopwatch
-			$stopWatch.Start()
-	
+			$failureThreshold = New-TimeSpan -Seconds 5
 			$restartWaitInSeconds = 1
+			$maxRetriesWhenFailure = $timeoutInSeconds / $restartWaitInSeconds
+			$stopWatch = New-Object -TypeName System.Diagnostics.Stopwatch
+			
 			Invoke-Expression $command
 
 			$retries = 0
-			while ($stopWatch.Elapsed -le $wait)
+			while ($retries -le $maxRetriesWhenFailure)
 			{
-				$retries++
 				$log.Info("[$retries] Restarting ""$command"" in $($restartWaitInSeconds)s")
 				Start-Sleep -Seconds $restartWaitInSeconds
 	
+				$stopWatch.Restart()
 				Invoke-Expression $command
+				$stopWatch.Stop()
+				
+				if ($stopWatch.Elapsed -le $failureThreshold)
+				{
+					$retries++				
+				} 
+				else 
+				{
+					$retries = 0
+				}
 			}
 
 			$log.Error("Port forward timed out ($($stopWatch.Elapsed.ToString('mm\m\ ss\s'))), giving up")
