@@ -1,0 +1,10 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+containerdConfigPatches:
+  # Need to define how to communicate with a local docker repo from Containerd. 
+  # This is needed to be able to communicate with insecure image registries, 
+  # similar to what the insecure registry setting in Docker does; https://docs.docker.com/registry/insecure/
+  # https://kind.sigs.k8s.io/docs/user/local-registry/#create-a-cluster-and-registry
+- |-
+  [plugins."io.containerd.grpc.v1.cri".registry.mirrors."local:5001"]
+    endpoint = ["http://192.168.0.15:5001"]

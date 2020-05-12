@@ -38,7 +38,12 @@ class KindCluster
 
     [void] Create()
     {
-        kind create cluster --name $this.Name
+        kind create cluster --name $this.Name --config "$PSScriptRoot\kind\config.yaml"
+
+        $(kind get nodes --name $this.Name) | ForEach-Object
+        {
+            $this.Log.Info($(kubectl annotate node "$_" "kind.x-k8s.io/registry=local:5001"))
+        }
     }
 
     [void] Delete()
