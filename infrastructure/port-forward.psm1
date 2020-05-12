@@ -30,7 +30,7 @@ class PortForward
 		$currentContext = Invoke-Expression "kubectl config current-context"
 		$this.Log.Info("Waiting max $($timeoutInSeconds)s for $($this.Resource) in namespace $($this.Namespace) and context $currentContext to become available for port forwarding...")
 
-		$command = "kubectl port-forward --pod-running-timeout=$($timeoutInSeconds)s $($this.Resource) $($this.From):$($this.To) --namespace $($this.Namespace)"
+		$command = "kubectl port-forward --address 0.0.0.0 --pod-running-timeout=$($timeoutInSeconds)s $($this.Resource) $($this.From):$($this.To) --namespace $($this.Namespace)"
 		$originalCall = "`$<portForward>.$((Get-PSCallStack)[0].FunctionName)($timeoutInSeconds)"
 		Start-Job -Name $this.JobName -ScriptBlock { 
 			param($command, $originalCall, $timeoutInSeconds, $logModulePath)
