@@ -65,7 +65,7 @@ class PortForward
 				}
 			}
 
-			$log.Error("Port forward timed out ($($stopWatch.Elapsed.ToString('mm\m\ ss\s'))), giving up")
+			$log.Error("Port forward timed out ($maxRetriesWhenFailure failures in a row each within the $($failureThreshold.ToString('mm\m\ ss\s')) threshold), giving up")
 			$log.Info("To port forward again run:")
 			$log.Info($originalCall)
 		} -ArgumentList $command, $originalCall, $timeoutInSeconds, "$PSScriptRoot\log.psm1"
