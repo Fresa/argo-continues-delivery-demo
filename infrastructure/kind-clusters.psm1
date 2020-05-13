@@ -36,14 +36,31 @@ class KindCluster
         }
     }
 
-    [void] Create()
+    [void] Create(
+        [int]$registryPort
+    )
     {
-        kind create cluster --name $this.Name --config "$PSScriptRoot\kind\config.yaml"
+        $localIpAddress = Get-NetIPAddress -AddressFamily IPv4 -AddressState Preferred | 
+            where-object { $_.InterfaceAlias -notmatch 'Loopback'} | 
+            select-object -First 1 | 
+            select-object -exp IPAddress
 
-        $(kind get nodes --name $this.Name) | ForEach-Object
-        {
-            $this.Log.Info($(kubectl annotate node "$_" "kind.x-k8s.io/registry=local:5001"))
-        }
+        $registryAddressAlias = "local:$registryPort"
+
+@"
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+containerdConfigPatches:
+  # Need to define how to communicate with a local docker repo from Containerd. 
+  # This is needed to be able to communicate with insecure image registries, 
+  # similar to what the insecure registry setting in Docker does; https://docs.docker.com/registry/insecure/
+  # https://kind.sigs.k8s.io/docs/user/local-registry/#create-a-cluster-and-registry
+- |-
+  [plugins."io.containerd.grpc.v1.cri".registry.mirrors."$registryAddressAlias"]
+    endpoint = ["http://$($localIpAddress):$($registryPort)"]
+"@ | Out-File "$PSScriptRoot\kind\config.yaml"
+
+        kind create cluster --name $this.Name --config "$PSScriptRoot\kind\config.yaml"
     }
 
     [void] Delete()

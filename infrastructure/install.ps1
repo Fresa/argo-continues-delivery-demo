@@ -26,7 +26,7 @@ $clusters | ForEach-Object {
 
 # Install
 $clusters | ForEach-Object { 
-    $_.Create()
+    $_.Create($ciCluster.DockerRegistry.Port)
     Write-Host
     $_.Dashboard.Install()
     Write-Host
