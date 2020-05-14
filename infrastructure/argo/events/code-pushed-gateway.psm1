@@ -8,9 +8,10 @@ class CodePushedGateway
     [int]$Port = 12000
     [PortForward]$PortForwarder
 
-    CodePushedGateway()
+    CodePushedGateway([string]$context)
     {
         $this.PortForwarder = [PortForward]::new(
+            $context,
             "deployment/$($this.Service)", 
             $this.Namespace, 
             $this.Port, 

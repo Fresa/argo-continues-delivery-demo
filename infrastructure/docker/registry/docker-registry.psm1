@@ -9,9 +9,14 @@ class DockerRegistry {
     [PortForward]$PortForwarder
     [Log]$Log = [Log]::new([DockerRegistry])
 
-    DockerRegistry()
+    DockerRegistry([string]$context)
     {
-        $this.PortForwarder = [PortForward]::new("service/$($this.Service)", $this.Namespace, $this.Port, $this.ContainerPort)
+        $this.PortForwarder = [PortForward]::new(
+            $context, 
+            "service/$($this.Service)", 
+            $this.Namespace, 
+            $this.Port, 
+            $this.ContainerPort)
     }
 
     [void] Install()

@@ -75,10 +75,9 @@ class KindApplicationCluster : KindCluster
     [ArgoCDServer]$ArgoCDServer
 
     KindApplicationCluster(
-        [string]$environment,
-        [K8sDashboard]$dashboard,
+        [KindCluster]$kindCluster,
         [ArgoCDServer]$argoCDServer
-    ) : base($environment, $dashboard) 
+    ) : base($kindCluster.Environment, $kindCluster.Dashboard) 
     {
         $this.ArgoCDServer = $argoCDServer
     }
@@ -100,12 +99,11 @@ class KindCICluster : KindCluster
     [DockerRegistry]$DockerRegistry
 
     KindCICluster(
-        [string]$environment,
-        [K8sDashboard]$dashboard,
+        [KindCluster]$kindCluster,
         [ArgoServer]$ArgoServer,
         [DockerRegistry]$dockerRegistry,
         [CodePushedGateway]$codePushedGateway
-    ) : base($environment, $dashboard) 
+    ) : base($kindCluster.Environment, $kindCluster.Dashboard) 
     {
         $this.ArgoServer = $ArgoServer
         $this.DockerRegistry = $dockerRegistry
@@ -117,20 +115,35 @@ class KindClusters : System.Collections.ArrayList
 {
     KindClusters()
     {
+        $ciCluster = [KindCluster]::new(
+            "ci", 
+            [K8sDashboard]::new(8001))
         $this.Add([KindCICluster]::new(
-            "ci",
-            [K8sDashboard]::new(8001),
-            [ArgoServer]::new(),
-            [DockerRegistry]::new(),
-            [CodePushedGateway]::new()))
-        $this.Add([KindApplicationCluster]::new(
+            $ciCluster,
+            [ArgoServer]::new(
+                $ciCluster.Context),
+            [DockerRegistry]::new(
+                $ciCluster.Context),
+            [CodePushedGateway]::new(
+                $ciCluster.Context)))
+        
+        $testCluster = [KindCluster]::new(
             "test", 
-            [K8sDashboard]::new(8002), 
-            [ArgoCDServer]::new(8080)))
+            [K8sDashboard]::new(8002))
         $this.Add([KindApplicationCluster]::new(
+            $testCluster, 
+            [ArgoCDServer]::new(
+                $testCluster.Context,
+                8080)))
+
+        $prodCluster = [KindCluster]::new(
             "prod", 
-            [K8sDashboard]::new(8003), 
-            [ArgoCDServer]::new(8081)))
+            [K8sDashboard]::new(8003))
+        $this.Add([KindApplicationCluster]::new(
+            $prodCluster, 
+            [ArgoCDServer]::new(
+                $prodCluster.Context,
+                8081)))
     }
 
     [System.Collections.ArrayList] GetApplicationClusters()

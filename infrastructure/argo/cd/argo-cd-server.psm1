@@ -12,10 +12,16 @@ class ArgoCDServer
     [Log] $Log = [Log]::new([ArgoCDServer])
 
     ArgoCDServer(
+        [string]$context,
         [int]$port
     )
     {
-        $this.PortForwarder = [PortForward]::new("svc/$($this.Service)", $this.Namespace, $port, $this.ContainerPort)
+        $this.PortForwarder = [PortForward]::new(
+            $context, 
+            "svc/$($this.Service)", 
+            $this.Namespace, 
+            $port, 
+            $this.ContainerPort)
     }
 
     [void] PortForward()

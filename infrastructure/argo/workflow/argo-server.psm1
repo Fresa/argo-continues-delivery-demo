@@ -7,9 +7,14 @@ class ArgoServer {
     [int]$Port = 2746
     [PortForward]$PortForwarder
 
-    ArgoServer()
+    ArgoServer([string]$context)
     {
-        $this.PortForwarder = [PortForward]::new("deployment/$($this.Service)", $this.Namespace, $this.Port, $this.ContainerPort)
+        $this.PortForwarder = [PortForward]::new(
+            $context, 
+            "deployment/$($this.Service)", 
+            $this.Namespace, 
+            $this.Port, 
+            $this.ContainerPort)
     }
 
     [void] PortForward()
