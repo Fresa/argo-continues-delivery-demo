@@ -45,15 +45,20 @@ spec:
 
                 templates:
                 - name: demo-ci
-                  steps:
-                  - - name: is-tag
+                  dag:
+                    tasks:
+                    - name: is-tag
                       template: is-tag
-                  - - name: build
+                    - name: build
+                      dependencies: [is-tag]
                       template: build
-                      when: "{{steps.is-tag.outputs.result}} == false"
-                  - - name: update-chart-image-tag
+                      when: "{{tasks.is-tag.outputs.result}} == false"
+                    - name: update-chart-image-tag
+                      dependencies: [build]
                       template: update-chart-image-tag
-                 
+                      # This should be improved when more enhanced dependency logic is available, https://github.com/argoproj/argo/pull/2673
+                      when: "{{tasks.is-tag.outputs.result}} == false"
+                  
                 - name: is-tag
                   script:
                     image: alpine:3.9.6
