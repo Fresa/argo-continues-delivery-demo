@@ -42,6 +42,8 @@ spec:
                     value: SET_FROM_PARAMETER
                   - name: ref
                     value: SET_FROM_PARAMETER
+                  - name: version
+                    value: "1.1"
 
                 templates:
                 - name: demo-ci
@@ -71,7 +73,7 @@ spec:
                     image: gcr.io/kaniko-project/executor:v0.15.0
                     args: ["--dockerfile=Dockerfile",
                           "--context={{workflow.parameters.git_url}}#{{workflow.parameters.ref}}",
-                          "--destination=docker-registry.default:5000/demo:1.0",
+                          "--destination=docker-registry.default:5000/demo:{{workflow.parameters.version}}",
                           "--insecure"]
 
                 - name: update-chart-image-tag
@@ -86,17 +88,23 @@ spec:
                     image: dave08/docker-yq-git:latest
                     command: [sh, -c]
                     args:
-                      - yq w -i helm/values-test.yaml image.tag 1.0;
+                      - yq w -i helm/values-test.yaml image.tag {{workflow.parameters.version}};
 
                         git config user.email "<>";
                         git config user.name "Argo CI";
 
-                        git remote set-url origin https://I-NEED-TO-BE-SECURED:x-oauth-basic@github.com/Fresa/argo-continues-delivery-demo-config.git;
+                        git remote set-url origin "https://$(GIT_API_KEY):x-oauth-basic@github.com/Fresa/argo-continues-delivery-demo-config.git";
  
                         git add .;
-                        git commit -m "Update image to v1.0";
+                        git commit -m "Update image to v{{workflow.parameters.version}}";
                         git push origin master --tags --quiet;
                     workingDir: /src
+                    env:
+                    - name: GIT_API_KEY
+                      valueFrom:
+                        secretKeyRef:
+                          name: git-api-key
+                          key: key
 
       # Apply parameters at the template level.
       parameters:
