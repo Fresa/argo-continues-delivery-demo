@@ -9,7 +9,7 @@ spec:
     spec:
       containers:
         - name: sensor
-          image: argoproj/sensor:v0.14.0
+          image: argoproj/sensor:v0.15.0
           imagePullPolicy: Always
       serviceAccountName: argo-events-sa
   dependencies:
@@ -42,6 +42,8 @@ spec:
                     value: SET_FROM_PARAMETER
                   - name: ref
                     value: SET_FROM_PARAMETER
+                  - name: commits
+                    value: SET_FROM_PARAMETER
                   - name: version
                     value: "1.1"
 
@@ -51,15 +53,20 @@ spec:
                     tasks:
                     - name: is-tag
                       template: is-tag
-                    - name: build
+                    - name: commit-contains-only-ignored-files
                       dependencies: [is-tag]
-                      template: build
+                      template: commit-contains-only-ignored-files
                       when: "{{tasks.is-tag.outputs.result}} == false"
+                    - name: build
+                      dependencies: [commit-contains-only-ignored-files]
+                      template: build
+                      # This should be improved when more enhanced dependency logic is available, https://github.com/argoproj/argo/pull/2673
+                      when: "{{tasks.is-tag.outputs.result}} == false && {{tasks.commit-contains-only-ignored-files.outputs.result}} == false"
                     - name: update-chart-image-tag
                       dependencies: [build]
                       template: update-chart-image-tag
                       # This should be improved when more enhanced dependency logic is available, https://github.com/argoproj/argo/pull/2673
-                      when: "{{tasks.is-tag.outputs.result}} == false"
+                      when: "{{tasks.is-tag.outputs.result}} == false && {{tasks.commit-contains-only-ignored-files.outputs.result}} == false"
                   
                 - name: is-tag
                   script:
@@ -67,6 +74,17 @@ spec:
                     command: [sh]
                     source: |
                       case {{workflow.parameters.ref}} in refs/tags/*) echo true;; *) echo false;; esac;
+
+                  # Ignore commits to chart directory since it does not affect the build output.
+                  # - This CI process commits image tag version to files in the chart directory, and we do not want to trigger endless builds
+                  # - Argo CD will react to changes in the chart directory
+                - name: commit-contains-only-ignored-files
+                  script:
+                    image: endeveit/docker-jq:latest
+                    command: [sh, -c]
+                    args: ["
+                      echo '{{workflow.parameters.commits}}' | jq '[.[] | .added + .removed + .modified] | flatten | all(startswith(\"helm/\"))';
+                    "]
 
                 - name: build
                   container:
@@ -116,3 +134,7 @@ spec:
             dependencyName: code-pushed
             dataKey: body.ref
           dest: k8s.source.resource.spec.arguments.parameters.1.value
+        - src:
+            dependencyName: code-pushed
+            dataKey: body.commits
+          dest: k8s.source.resource.spec.arguments.parameters.2.value
