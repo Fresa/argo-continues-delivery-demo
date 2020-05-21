@@ -13,7 +13,7 @@ spec:
 
   # Source of the application manifests
   source:
-    repoURL: https://github.com/Fresa/argo-continues-delivery-demo-config.git
+    repoURL: https://github.com/Fresa/argo-continues-delivery-demo.git
     targetRevision: HEAD
     path: helm
 
