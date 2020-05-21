@@ -100,7 +100,7 @@ spec:
                     - name: chart-source
                       path: /src
                       git:
-                        repo: https://github.com/Fresa/argo-continues-delivery-demo-config.git
+                        repo: https://github.com/Fresa/argo-continues-delivery-demo.git
                         revision: master
                   container:
                     image: dave08/docker-yq-git:latest
@@ -111,7 +111,7 @@ spec:
                         git config user.email "<>";
                         git config user.name "Argo CI";
 
-                        git remote set-url origin "https://$(GIT_API_KEY):x-oauth-basic@github.com/Fresa/argo-continues-delivery-demo-config.git";
+                        git remote set-url origin "https://$(GIT_API_KEY):x-oauth-basic@github.com/Fresa/argo-continues-delivery-demo.git";
  
                         git add .;
                         git commit -m "Update image to v{{workflow.parameters.version}}";
